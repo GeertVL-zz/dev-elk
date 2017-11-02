@@ -1,0 +1,12 @@
+{
+    "rabbit_version":"3.6.10",
+    "exchanges": [{
+        "name":"klim.actor",
+        "vhost":"/",
+        "type":"fanout",
+        "durable":true,
+        "auto_delete":false,
+        "internal":false,
+        "arguments":{}
+    }]
+}

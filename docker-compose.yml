@@ -1,0 +1,67 @@
+version: '2'
+
+services:
+
+  elasticsearch:
+    build: elasticsearch/
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+  logstash:
+    build: logstash/
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5000:5000"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+      - rabbit
+    links:
+      - rabbit
+  kibana:
+    build: kibana/
+    volumes:
+      - ./kibana/config/:/usr/share/kibana/config
+    ports:
+      - "5601:5601"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+  rabbit:
+    image: "rabbitmq:3-management"
+    hostname: "rabbit"
+    container_name: "rabbit"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      # RABBITMQ_DEFAULT_VHOST: "/"
+      RABBITMQ_CONFIG_FILE: "/opt/config/rabbitmq"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    labels:
+      NAME: "rabbitmq1"
+    volumes:
+      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./rabbitmq/config/opt:/opt/definition
+      - ./rabbitmq/config/etc:/opt/config
+    networks:
+      - elk
+      
+networks:
+
+  elk:
+    driver: bridge
